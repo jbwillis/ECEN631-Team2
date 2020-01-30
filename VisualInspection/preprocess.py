@@ -19,6 +19,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
+fov_tl = (50, 0) # top left
+fov_br = (590, 480) # bottom right
 
 rawVideo = cv2.VideoCapture(args.input_file)
 
@@ -27,16 +29,19 @@ backSub = cv2.createBackgroundSubtractorMOG2()
 def segment(img):
     """
     """
-    blurred = cv2.GaussianBlur(img, (15, 15), 0)
-    fgMask = backSub.apply(blurred)
-
-    processed = fgMask
     # convert to grayscale
-    # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    # gray = cv2.adaptiveThreshold(gray, 127, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 1)
-    # processed = gray
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = 1.5*gray.astype(float)
+    gray = np.uint8(gray)
 
-    # processed, contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    ret, thresh = cv2.threshold(gray, 45, 255, cv2.THRESH_BINARY)
+    # thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+    kernel = np.ones((5,5),np.uint8)
+    opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=3)
+
+    processed, contours, hierarchy = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # remove contours with points outside crop region
 
     return processed
 
@@ -45,6 +50,8 @@ while (rawVideo.isOpened()):
     ret, frame = rawVideo.read()
 
     processed = segment(frame)
+
+    frame = cv2.rectangle(frame, fov_tl, fov_br, (0, 255, 0))
 
     cv2.imshow('Raw Video', frame)
     cv2.imshow('Processed', processed)
