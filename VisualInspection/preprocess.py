@@ -78,9 +78,6 @@ while (rawVideo.isOpened()):
         if corners[1,0] > 0 and corners[1,1] < 480 and corners[0,0] > 50 and corners[0,1] < 610:
             seg = np.copy(frame[corners[1,0]:corners[1,1], corners[0,0]:corners[0,1]])
 
-            if seg.shape[0] != 150 or seg.shape[1] != 150:
-                import pdb; pdb.set_trace()
-
             if args.output_file is not None:
                 fname = "{}_{:04}.png".format(args.output_file, segnum)
                 cv2.imwrite(fname, seg)
