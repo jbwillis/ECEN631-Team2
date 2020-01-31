@@ -20,7 +20,10 @@ import matplotlib.pyplot as plt
 import cv2
 
 fov_tl = (50, 0) # top left
-fov_br = (590, 480) # bottom right
+fov_br = (610, 480) # bottom right
+
+seg_size = (75, 75) # half of the box size
+offsets = np.array([[-75, 75], [-75, 75]])
 
 rawVideo = cv2.VideoCapture(args.input_file)
 
@@ -34,29 +37,67 @@ def segment(img):
     gray = 1.5*gray.astype(float)
     gray = np.uint8(gray)
 
-    ret, thresh = cv2.threshold(gray, 45, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY)
     # thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
     kernel = np.ones((5,5),np.uint8)
     opened = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=3)
 
+    # set edges to 0
+    opened[0:480, 0:50] = 0
+    opened[0:480, 610:] = 0
+
     processed, contours, hierarchy = cv2.findContours(opened, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    if (len(contours) > 0):
+        maxC = max(contours, key = cv2.contourArea)
+        (x, y), rad = cv2.minEnclosingCircle(maxC)
+        cent = (int(x), int(y))
+        rad = int(rad)
+    else:
+        cent = None
+        rad = None
 
     # remove contours with points outside crop region
 
-    return processed
+    return processed, cent, rad
 
-
+segnum = 0
 while (rawVideo.isOpened()):
-    ret, frame = rawVideo.read()
 
-    processed = segment(frame)
+    # only process every third frame
+    for i in range(3):
+        ret, frame = rawVideo.read()
+
+    processed, cent, rad = segment(frame)
+
+
+    seg = None
+    if cent is not None and rad is not None:
+        corners = np.array([[cent[0], cent[0]], [cent[1], cent[1]]]) + offsets
+        
+        if corners[1,0] > 0 and corners[1,1] < 480 and corners[0,0] > 50 and corners[0,1] < 610:
+            seg = np.copy(frame[corners[1,0]:corners[1,1], corners[0,0]:corners[0,1]])
+
+            if seg.shape[0] != 150 or seg.shape[1] != 150:
+                import pdb; pdb.set_trace()
+
+            if args.output_file is not None:
+                fname = "{}_{:04}.png".format(args.output_file, segnum)
+                cv2.imwrite(fname, seg)
+
+            cv2.imshow('segment', seg)
+            cv2.waitKey(5)
+            segnum += 1
+
+        frame = cv2.circle(frame, cent, rad, (0, 0, 255))
+
 
     frame = cv2.rectangle(frame, fov_tl, fov_br, (0, 255, 0))
 
     cv2.imshow('Raw Video', frame)
     cv2.imshow('Processed', processed)
-    cv2.waitKey(15)
+    cv2.waitKey(10)
 
 rawVideo.release()
-cv.destroyAllWindows()
+cv2.destroyAllWindows()
 
