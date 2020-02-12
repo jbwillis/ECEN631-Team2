@@ -3,9 +3,9 @@ import numpy as np
 
 # patternSize = (6,8)
 
-# video = cv.VideoCapture('car_vids/for_transform.avi'); 
+# video = cv.VideoCapture('car_vids/for_transform.avi');
 patternSize = (7,9)
-video = cv.VideoCapture('car_vids/transform.avi'); 
+video = cv.VideoCapture('car_vids/transform.avi');
 
 if video.isOpened():
     ret, frame = video.read()
@@ -17,9 +17,9 @@ while ret and frame_cnt < 118:
 
     if cv.waitKey(1) == 27:
         print('break')
-        break 
+        break
 
-    
+
     if cv.waitKey(1) != -1:
         processType = cv.waitKey(0)
 
@@ -44,11 +44,22 @@ if ret:
     out_corners.append(corners[patternSize[0] -1])
     out_corners.append(corners[patternSize[0]*patternSize[1] - patternSize[0]])
     out_corners.append(corners[patternSize[0]*patternSize[1] - 1])
+    print(out_corners)
 
     for oc in out_corners:
         frame_oc = cv.drawMarker(frame0, tuple(oc[0]), (0, 255, 0))
 
+    h = frame.shape[0]
+    w = frame.shape[1]
+    print(h,w)
+    # in_corners = np.array([[0,h],[0,0],[w,h],[w,0]], dtype="float32")
+    in_corners = np.array([[200,500],[200,500],[200,500],[200,500]], dtype="float32") + 0.5*np.array([[250,450],[250,300],[450,450],[450,300]], dtype="float32")
+    map = cv.getPerspectiveTransform(np.squeeze(out_corners), in_corners)
+    warped = cv.warpPerspective(frame0, map, (2*w,2*h))
+
+    cv.imshow('warp', warped)
+
+
 
     cv.imshow('outer corners', frame_oc)
     cv.waitKey()
-
