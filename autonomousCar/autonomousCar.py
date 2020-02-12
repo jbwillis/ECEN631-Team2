@@ -19,8 +19,8 @@ def noChange(frame):
 ####### Task 2
 
 
-# video = cv.VideoCapture('car.avi'); # get video
-video = cv.VideoCapture('car2.avi'); # get video
+video = cv.VideoCapture('car_vids/car.avi'); # get video
+# video = cv.VideoCapture('car2.avi'); # get video
 
 if video.isOpened():
     ret, frame = video.read()
@@ -37,9 +37,9 @@ while ret:
 
     if cv.waitKey(1) == 27:
         print('break')
-        break 
+        break
 
-    
+
     if cv.waitKey(1) != -1:
         processType = cv.waitKey(0)
 
