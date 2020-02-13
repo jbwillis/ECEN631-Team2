@@ -1,25 +1,23 @@
+#! /usr/bin/env python3
+"""
+Test file for testing the obstacle masking functions
+"""
 
 import cv2 as cv
 import numpy as np
 
+from car_visionTools import coneMask, wallMask
 
-def filterNoise(img):
-    kernel = np.ones((3,3),np.uint8)
+import argparse
 
-    img = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
-    img = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
-
-    return img
-
-def noChange(frame):
-    return frame
+parser = argparse.ArgumentParser()
 
 
+parser.add_argument('in_file', help='the filepath to read the video from')
+args = parser.parse_args()
 
-####### Task 2
 
-
-video = cv.VideoCapture('car_vids/car.avi'); # get video
+video = cv.VideoCapture(args.in_file); # get video
 # video = cv.VideoCapture('car2.avi'); # get video
 
 if video.isOpened():
@@ -48,28 +46,16 @@ while ret:
 
     frame = cv.cvtColor(frame0, cv.COLOR_BGR2HSV)
 
-    # cones
-    coneHSVLow = np.array([160,220,220])
-    coneHSVHigh = np.array([180,255,255])
-
-    frameCone = cv.inRange(frame, coneHSVLow,coneHSVHigh)
-    frameCone = filterNoise(frameCone)
-
-    #walls
-    wallHSVLow = np.array([80,130,130])
-    wallHSVHigh = np.array([100,255,255])
-
-    frameWall = cv.inRange(frame, wallHSVLow,wallHSVHigh)
-    frameWall = filterNoise(frameWall)
-
-
+    frameCone = coneMask(frame)
+    frameWall = wallMask(frame)
+    
     #total
     total = frameWall + frameCone
 
     cv.imshow('original', frame0)
     # cv.imshow('wall', frameWwall)
     # cv.imshow('cones',frameCone)
-    # cv.imshow('all',total)
+    cv.imshow('all',total)
 
     res = cv.bitwise_and(frame0,frame0, mask= total)
 
