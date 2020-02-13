@@ -68,3 +68,20 @@ def getConeWallMasks(frame):
     wall = cv.dilate(wall, kernel, iterations = 2)
     wall = cv.erode(wall, kernel, iterations = 2)
     return cones, wall
+
+def toOccupancyGrid(frame, nx, ny):
+    """
+    convert a masked frame into an occupancy grid 
+    nx: number of horizontal cells
+    ny: number of vertical cells
+    """
+
+    fx, fy = frame.shape
+
+    og = np.zeros((ny, nx))
+    x_step = int(fx/nx)
+    y_step = int(fy/ny)
+    for ogx_i, fx_i in enumerate(np.arange(0, fx, x_step)):
+        for ogy_i, fy_i in enumerate(np.arange(0, fy, y_step)):
+            og[ogx_i, ogy_i] = np.count_nonzero(frame[fx_i:fx_i+x_step, fy_i:fy_i+y_step])
+    return og
