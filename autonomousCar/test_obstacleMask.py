@@ -5,8 +5,9 @@ Test file for testing the obstacle masking functions
 
 import cv2 as cv
 import numpy as np
+import time
 
-from car_visionTools import coneMask, wallMask
+from car_visionTools import coneMask, wallMask, getConeWallMasks
 
 import argparse
 
@@ -33,35 +34,34 @@ else:
 
 while ret:
 
+    start = time.time()
     if cv.waitKey(1) == 27:
         print('break')
         break
 
-
-    if cv.waitKey(1) != -1:
-        processType = cv.waitKey(0)
-
-
     ret, frame0 = video.read()
 
-    frame = cv.cvtColor(frame0, cv.COLOR_BGR2HSV)
 
-    frameCone = coneMask(frame)
-    frameWall = wallMask(frame)
+    frameCone = coneMask(frame0)
+    frameWall = wallMask(frame0)
+
+    cones, walls = getConeWallMasks(frame0)
     
     #total
-    total = frameWall + frameCone
+    total1 = frameWall + frameCone
+    total2 = cones + walls
 
     cv.imshow('original', frame0)
-    # cv.imshow('wall', frameWwall)
-    # cv.imshow('cones',frameCone)
-    cv.imshow('all',total)
+    cv.imshow('total1',total1)
+    cv.imshow('total2',total2)
 
-    res = cv.bitwise_and(frame0,frame0, mask= total)
+    res1= cv.bitwise_and(frame0,frame0, mask=total1)
+    cv.imshow('masked1',res1)
 
+    res2 = cv.bitwise_and(frame0,frame0, mask=total2)
+    cv.imshow('masked2',res2)
 
-    cv.imshow('best',res)
-
+    print(time.time() - start)
 
 video.release()
 
