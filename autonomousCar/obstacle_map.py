@@ -21,21 +21,48 @@ def main():
 
         cones, walls = getConeWallMasks(frame)
 
+        kernel = np.ones((5,5),np.uint8)
+        walls = cv.erode(walls, kernel, iterations = 3)
+
         cone_depth = cv.bitwise_and(depth, depth, mask=cones)
         wall_depth = cv.bitwise_and(depth, depth, mask=walls)
 
         num_samples = 300
+        num_samples_cone = 30
         # wall_pix = cv.findNonZero(walls)
-        wall_pix = np.argwhere(walls != 0)
+        wall_pix = np.argwhere(wall_depth != 0)
         if wall_pix.size != 0:
             np.random.shuffle(wall_pix)
             wall_pts = wall_pix[:num_samples,:]
             wall_pts_r = depth[wall_pts[:,0],wall_pts[:,1]]
-            wall_pts_b = (wall_pts[:,1] - image_width/2.0)/image_width * np.pi/4
+            wall_pts_b = (wall_pts[:,1] - image_width/2.0)/image_width * np.radians(94/2)
+            wall_pts_b = wall_pts_b[np.bitwise_and(wall_pts_r > 300, wall_pts_r < 2000)]
+            wall_pts_r = wall_pts_r[np.bitwise_and(wall_pts_r > 300, wall_pts_r < 2000)]
             wall_pts_x = wall_pts_r * np.sin(wall_pts_b)
             wall_pts_y = wall_pts_r * np.cos(wall_pts_b)
+
+            cone_pix = np.argwhere(cone_depth != 0)
+            if cone_pix.size != 0:
+                np.random.shuffle(cone_pix)
+                cone_pts = cone_pix[:num_samples_cone,:]
+                cone_pts_r = depth[cone_pts[:,0],cone_pts[:,1]]
+                cone_pts_b = (cone_pts[:,1] - image_width/2.0)/image_width * np.radians(94/2)
+                cone_pts_b = cone_pts_b[np.bitwise_and(cone_pts_r > 300, cone_pts_r < 2000)]
+                cone_pts_r = cone_pts_r[np.bitwise_and(cone_pts_r > 300, cone_pts_r < 2000)]
+                cone_pts_x = cone_pts_r * np.sin(cone_pts_b)
+                cone_pts_y = cone_pts_r * np.cos(cone_pts_b)
+
+                plt.scatter(cone_pts_x, cone_pts_y)
+
+
+            # poly = np.polyfit(wall_pts_x, wall_pts_y, 3)
+            # x = np.linspace(-500, 500, 100)
+            # y = poly[0]*x**3 + poly[1]*x**2 + poly[2]*x + poly[3]
             plt.scatter(wall_pts_x, wall_pts_y)
+            # plt.scatter(x,y)
             plt.show()
+
+
 
             # wall_pts_depth = depth[]
 
