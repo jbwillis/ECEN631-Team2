@@ -29,6 +29,34 @@ def plt_decisionGrid(dg, x, y, block=True):
     ax.plot_surface(x, y, dg)
     plt.show(block=block)
 
+class carControl:
+    def __init__(self):
+        # initialize communication with the arduino
+        ser = serial.Serial("/dev/ttyUSB0", 115200)
+        ser.flushInput()
+        time.sleep(2)
+        self.ser = ser
+        ser.write("!start1570\n".encode())
+        ser.write("!speed0.0\n".encode())
+        ser.write("!inits0.8\n".encode())
+        ser.write("!straight1575\n".encode())
+        ser.write("!kp0.01\n".encode())
+        ser.write("!kd0.01\n".encode())
+        ser.write("!pid1\n".encode())
+
+        self.drive(1.0)
+        #time.sleep(.5)
+        self.drive(0)
+
+    def drive(self, speed):
+        forward_command = "!speed" + str(speed) + "\n"
+        self.ser.write(forward_command.encode())
+
+    def steer(self, degree):
+        steer_command = "!steering" + str(degree) + "\n"
+        self.ser.write(steer_command.encode())
+
+
 if __name__=="__main__":
     dg, x, y = decisionGridGaussian(20,20, sigx=3., sigy=5., gain=10.)
     plt_decisionGrid(dg, x, y)
