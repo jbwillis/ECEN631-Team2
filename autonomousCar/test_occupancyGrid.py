@@ -8,15 +8,17 @@ import numpy as np
 import time
 from matplotlib import pyplot as plt
 
-from car_visionTools import toOccupancyGrid, getConeWallMasks
+from car_visionTools import *
+from car_controlTools import *
 
 import argparse
 
 parser = argparse.ArgumentParser()
 
+gridx, gridy = 10, 10 
+
 plt.ion()
 plt.figure(0)
-plt.gca().invert_yaxis()
 
 parser.add_argument('in_file', help='the filepath to read the video from')
 args = parser.parse_args()
@@ -28,6 +30,8 @@ if video.isOpened():
 else:
     ret = False
 
+decisionGrid,x,y = decisionGridGaussian(gridx, gridy, sigx=1., sigy=2., gain=10)
+plt_decisionGrid(decisionGrid, x, y, block=False)
 while ret:
 
     start = time.time()
@@ -37,16 +41,30 @@ while ret:
 
     ret, frame0 = video.read()
 
+    frame0 = cropFrame(frame0, rm_bot=20)
+
     cones, walls = getConeWallMasks(frame0)
 
-    og = toOccupancyGrid(cones+walls, 20, 20)
+    og = toOccupancyGrid(cones+walls, gridx, gridy)
+
+    og = np.clip(og, 0., 1.) # binarize the occupancy grid
+    decision = og*decisionGrid
+    print(decision)
+    mind = np.amin(decision)
+    maxd = np.amax(decision)
+    if abs(mind) > maxd:
+        used = mind
+    else:
+        used = maxd
 
     cv.imshow('original', frame0)
     cv.imshow('mask', cones+walls)
-    print(og)
     # cv.imshow('og', og)
     plt.figure(0)
+    plt.clf()
     plt.pcolormesh(og)
+    plt.plot([gridx/2, gridx/2-used], [gridy, gridy/2], lw=2, c='r')
+    plt.axis([0, gridx, gridy, 0])
     plt.draw()
     plt.show(block=False)
     plt.pause(.001)

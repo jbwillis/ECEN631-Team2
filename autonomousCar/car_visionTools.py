@@ -60,7 +60,7 @@ def getConeWallMasks(frame):
     cones = cv.erode(cones, kernel, iterations = 2)
 
     b_thresh = cv.bitwise_and(s_thresh, b)
-    _, wall = cv.threshold(b_thresh, 180, 255, cv.THRESH_BINARY)
+    _, wall = cv.threshold(b_thresh, 150, 255, cv.THRESH_BINARY)
     #
     # kernel = np.ones((3,3),np.uint8)
     wall = cv.erode(wall, kernel, iterations = 2)
@@ -79,9 +79,13 @@ def toOccupancyGrid(frame, nx, ny):
     fx, fy = frame.shape
 
     og = np.zeros((ny, nx))
-    x_step = int(fx/nx)
-    y_step = int(fy/ny)
+    x_step = int(fx/nx+.5) # round up
+    y_step = int(fy/ny+.5)
     for ogx_i, fx_i in enumerate(np.arange(0, fx, x_step)):
         for ogy_i, fy_i in enumerate(np.arange(0, fy, y_step)):
             og[ogx_i, ogy_i] = np.count_nonzero(frame[fx_i:fx_i+x_step, fy_i:fy_i+y_step])
     return og
+
+def cropFrame(frame, rm_top=0, rm_bot=0, rm_lef=0, rm_rig=0):
+    fx, fy, _ = frame.shape
+    return np.copy(frame[rm_top:fx-rm_bot, rm_lef:fy-rm_rig, ...])
