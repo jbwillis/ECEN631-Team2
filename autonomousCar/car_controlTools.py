@@ -4,6 +4,8 @@ for the autonomous car project
 """
 
 import numpy as np
+import serial
+import time
 
 def decisionGridGaussian(nx, ny, sigx=1., sigy=1., gain=1.):
     """

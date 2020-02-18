@@ -4,7 +4,9 @@ Control the car using dr. lee's occupancy grid method
 """
 
 import cv2 as cv
+import pyrealsense2 as rs
 import numpy as np
+import serial
 import time
 from matplotlib import pyplot as plt
 
@@ -17,8 +19,9 @@ gridx, gridy = 10, 10
 decisionGrid,_,_ = decisionGridGaussian(gridx, gridy, sigx=1., sigy=2., gain=10)
 
 cc = carControl()
+print("car initialized")
 
-vs = cv2.VideoCapture("/dev/video2", cv2.CAP_V4L)  # ls -ltr /dev/video*
+vs = cv.VideoCapture("/dev/video2", cv.CAP_V4L)  # ls -ltr /dev/video*
 writer = None
 (W, H) = (None, None)
 
@@ -30,10 +33,11 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 # Start streaming
 profile = pipeline.start(config)
 
+print("streaming started")
 start = time.time()
-while ret:
+while True:
 
-    if start - time.time() > 30:
+    if start - time.time() > 10:
         break
 
     (grabbed, frame0) = vs.read()
@@ -55,6 +59,7 @@ while ret:
     else:
         used = maxd
 
+    used = -used
     print(used)
     cc.drive(driveSpeed)
     cc.steer(used)
