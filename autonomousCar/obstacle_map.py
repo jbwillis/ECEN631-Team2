@@ -5,6 +5,16 @@ import matplotlib.pyplot as plt
 from car_visionTools import getConeWallMasks
 
 
+def sat(x, upper, lower):
+    if x > upper:
+        x = upper
+    elif x < lower:
+        x = lower
+    return x
+
+def get_avoid_mag(norm):
+    return sat(1000/norm, 200, 0)
+
 
 def main():
 
@@ -27,8 +37,8 @@ def main():
         cone_depth = cv.bitwise_and(depth, depth, mask=cones)
         wall_depth = cv.bitwise_and(depth, depth, mask=walls)
 
-        num_samples = 300
-        num_samples_cone = 30
+        num_samples = 200
+        num_samples_cone = 100
         # wall_pix = cv.findNonZero(walls)
         wall_pix = np.argwhere(wall_depth != 0)
         if wall_pix.size != 0:
@@ -54,6 +64,21 @@ def main():
 
                 plt.scatter(cone_pts_x, cone_pts_y)
 
+            obstacles = np.concatenate((np.concatenate((np.array([wall_pts_x]),np.array([wall_pts_y])), axis=0),
+                                        np.concatenate((np.array([cone_pts_x]),np.array([cone_pts_y])), axis=0)),
+                                        axis=1).T
+
+            go_vec = np.array([0.0, 1500.0])
+            for i in range(obstacles.shape[0]):
+                dist = np.linalg.norm(obstacles[i,:])
+                dir = -obstacles[i,:]/dist
+                mag = get_avoid_mag(dist)
+                go_vec += mag*dir
+
+            go_vec[0] *= 3 #kp for steering, kinda
+            print(go_vec)
+
+            plt.arrow(0.0, 0.0, go_vec.item(0), go_vec.item(1))
 
             # poly = np.polyfit(wall_pts_x, wall_pts_y, 3)
             # x = np.linspace(-500, 500, 100)
