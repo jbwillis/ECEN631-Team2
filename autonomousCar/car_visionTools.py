@@ -87,5 +87,8 @@ def toOccupancyGrid(frame, nx, ny):
     return og
 
 def cropFrame(frame, rm_top=0, rm_bot=0, rm_lef=0, rm_rig=0):
-    fx, fy, _ = frame.shape
+    sh = frame.shape
+    fx = sh[0]
+    fy = sh[1]
+
     return np.copy(frame[rm_top:fx-rm_bot, rm_lef:fy-rm_rig, ...])

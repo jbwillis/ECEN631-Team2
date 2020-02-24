@@ -38,16 +38,16 @@ class carControl:
         ser.flushInput()
         time.sleep(2)
         self.ser = ser
-        ser.write("!start1570\n".encode())
+        ser.write("!start1580\n".encode())
         ser.write("!speed0.0\n".encode())
-        ser.write("!inits0.8\n".encode())
+        ser.write("!inits0.5\n".encode())
         ser.write("!straight1575\n".encode())
-        ser.write("!kp0.01\n".encode())
-        ser.write("!kd0.01\n".encode())
-        ser.write("!pid1\n".encode())
+        ser.write("!kp0.001\n".encode())
+        ser.write("!kd0.001\n".encode())
+        ser.write("!pid0\n".encode())
 
         self.drive(1.0)
-        #time.sleep(.5)
+        time.sleep(.5)
         self.drive(0)
 
     def drive(self, speed):
@@ -60,5 +60,9 @@ class carControl:
 
 
 if __name__=="__main__":
-    dg, x, y = decisionGridGaussian(20,20, sigx=3., sigy=5., gain=10.)
-    plt_decisionGrid(dg, x, y)
+    cc = carControl()
+    cc.drive(1.)
+    cc.steer(10)
+    time.sleep(3)
+    cc.drive(-1)
+    cc.steer(-10)

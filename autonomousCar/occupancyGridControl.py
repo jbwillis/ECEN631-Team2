@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from car_visionTools import *
 from car_controlTools import *
 
-driveSpeed = .5
+driveSpeed = 0.5
 
 gridx, gridy = 10, 10 
 decisionGrid,_,_ = decisionGridGaussian(gridx, gridy, sigx=1., sigy=2., gain=10)
@@ -63,6 +63,10 @@ while True:
     print(used)
     cc.drive(driveSpeed)
     cc.steer(used)
+    
+    cv.imshow('cones', cones)
+    cv.imshow('walls', walls)
 
+    cv.waitKey(1)
 
 vs.release()
